@@ -32,8 +32,10 @@ module ForestLiana
               key.is_a?(Integer)
               key = @resource.defined_enums[@params[:groupByFieldName]].invert[key]
             elsif @resource.columns_hash[@params[:groupByFieldName]] &&
-              @resource.columns_hash[@params[:groupByFieldName]].type == :datetime
-              key = (key + timezone_offset.hours).strftime('%d/%m/%Y %T')
+              [:datetime, :timestamptz, :timestamp].include?(@resource.columns_hash[@params[:groupByFieldName]].type)
+              # NOTICE: A nil datetime group key would raise NoMethodError on
+              #         `nil + timezone_offset.hours`; label it explicitly.
+              key = key.present? ? (key + timezone_offset.hours).strftime('%d/%m/%Y %T') : 'No value'
             end
 
             { key: key, value: value }
